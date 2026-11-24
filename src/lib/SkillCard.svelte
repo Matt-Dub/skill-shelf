@@ -14,7 +14,9 @@
   {#if expanded}
     <div class="actions">
       {#each cardActions(skill) as action (action.kind)}
-        <button onclick={() => onAction(action)}>{action.label}</button>
+        <button class:primary={action.kind === "open-origin"} onclick={() => onAction(action)}>
+          {action.label}
+        </button>
       {/each}
     </div>
   {/if}
@@ -73,5 +75,9 @@
   }
   .actions button:hover {
     background: color-mix(in srgb, currentColor 10%, transparent);
+  }
+  .actions button.primary {
+    font-weight: 600;
+    border-color: color-mix(in srgb, currentColor 45%, transparent);
   }
 </style>

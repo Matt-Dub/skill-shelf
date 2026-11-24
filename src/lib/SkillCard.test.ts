@@ -7,6 +7,7 @@ const skill = {
   name: "tdd",
   description: "Test-driven development. Use when the user wants to build features test-first.",
   path: "/home/ada/.claude/skills/tdd",
+  origin: null,
 };
 
 describe("SkillCard", () => {
