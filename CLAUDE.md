@@ -1,13 +1,17 @@
-## Agent skills
+## Langue
+
+Communique avec l'utilisateur en français. Tous les documents `.md` du repo sont rédigés en français ; les termes du glossaire (`CONTEXT.md`) et le code restent en anglais.
+
+## Skills d'agent
 
 ### Issue tracker
 
-Issues are tracked in this repo's GitHub Issues via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+Les issues sont suivies dans les GitHub Issues de ce repo via la CLI `gh`. Voir `docs/agents/issue-tracker.md`.
 
-### Triage labels
+### Labels de triage
 
-Default canonical labels (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+Labels canoniques par défaut (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). Voir `docs/agents/triage-labels.md`.
 
-### Domain docs
+### Documentation du domaine
 
-Single-context: one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+Mono-contexte : un `CONTEXT.md` + `docs/adr/` à la racine du repo. Voir `docs/agents/domain.md`.

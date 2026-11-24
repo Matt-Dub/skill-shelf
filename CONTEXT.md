@@ -1,44 +1,46 @@
 # Skill Shelf
 
-A desktop widget that shows a user the skills installed on their machine, explains each one briefly, and takes them to where it comes from.
+Un widget de bureau qui montre à l'utilisateur les skills installés sur sa machine, explique brièvement chacun d'eux et l'emmène vers leur provenance.
 
-## Language
+Les termes du glossaire restent en anglais : ce sont ceux qu'emploient le code, les issues et les noms de tests.
 
-### Skills and where they come from
+## Vocabulaire
 
-**Skill**:
-A folder containing a `SKILL.md` that an agent can load; identified by its name.
-_Avoid_: Command, prompt, tool
+### Les skills et leur provenance
 
-**Library**:
-The full set of skills available to the user: their user skills, the skills brought by their plugins, and the agent's built-in skills. Project skills are not part of it.
-_Avoid_: Collection, catalog, inventory
+**Skill** :
+Un dossier contenant un `SKILL.md` qu'un agent peut charger ; identifié par son nom.
+_À éviter_ : Command, prompt, tool
 
-**User skill**:
-A skill installed at user level, whether it lives directly in the agent's skills folder or is linked there from a shared skills store.
+**Library** :
+L'ensemble des skills dont dispose l'utilisateur : ses user skills, les skills apportés par ses plugins et les skills intégrés à l'agent. Les skills de projet n'en font pas partie.
+_À éviter_ : Collection, catalog, inventory
 
-**Plugin skill**:
-A skill shipped inside an installed plugin; it belongs to that plugin. When the plugin is installed but not enabled, its skills are still in the Library but are **disabled**.
+**User skill** :
+Un skill installé au niveau utilisateur, qu'il se trouve directement dans le dossier de skills de l'agent ou qu'il y soit lié depuis un shared skills store.
 
-**Built-in skill**:
-A skill that ships with the agent itself rather than being installed by the user; it has no readable folder on disk.
-_Avoid_: Native skill, bundled skill
+**Plugin skill** :
+Un skill livré dans un plugin installé ; il appartient à ce plugin. Quand le plugin est installé mais pas activé, ses skills font toujours partie de la Library mais sont **désactivés**.
 
-**Origin**:
-Where a skill comes from and where the widget sends the user to learn more: the remote repository it was installed from, or, for a built-in skill, the agent vendor's documentation or repository. A skill written locally by the user has no origin.
-_Avoid_: Source, upstream
+**Built-in skill** :
+Un skill livré avec l'agent lui-même plutôt qu'installé par l'utilisateur ; il n'a pas de dossier lisible sur le disque.
+_À éviter_ : Native skill, bundled skill
 
-**Agent**:
-A coding assistant whose skills the widget reads (Claude Code first; others later).
+**Origin** :
+La provenance d'un skill, vers laquelle le widget envoie l'utilisateur pour en savoir plus : le dépôt distant depuis lequel il a été installé ou, pour un built-in skill, la documentation ou le dépôt de l'éditeur de l'agent. Un skill écrit localement par l'utilisateur n'a pas d'origin.
+_À éviter_ : Source, upstream
 
-### What the widget shows
+**Agent** :
+Un assistant de code dont le widget lit les skills (Claude Code d'abord ; d'autres plus tard).
 
-**Description**:
-The skill's own one-line summary, as written by its author.
+### Ce que montre le widget
 
-**Use case**:
-A short statement of when to reach for the skill, taken from an explicit field if the author provided one, otherwise extracted from the description.
-_Avoid_: Trigger, example
+**Description** :
+Le résumé d'une ligne du skill, tel que rédigé par son auteur.
 
-**Pinned mode**:
-The widget's state when it sits on the desktop beneath other windows, instead of opening from the system tray.
+**Use case** :
+Une courte indication du moment où utiliser le skill, tirée d'un champ explicite si l'auteur en a fourni un, sinon extraite de la description.
+_À éviter_ : Trigger, example
+
+**Pinned mode** :
+L'état du widget lorsqu'il est posé sur le bureau, sous les autres fenêtres, au lieu de s'ouvrir depuis la zone de notification.
