@@ -1,8 +1,8 @@
-# Tauri for the desktop shell
+# Tauri pour l'application de bureau
 
-The widget stays open all day (tray panel, optionally pinned to the desktop) and ships as open source on Windows, macOS and Linux, so we build it with Tauri (Rust backend, TypeScript web UI) rather than Electron or one native app per OS. Tauri gives native tray, frameless/transparent windows and a ~10 MB binary with a small memory footprint; Electron would cost ~150 MB of RAM for a list of skills, and native per-OS apps would triple the codebase.
+Le widget reste ouvert toute la journée (panneau dans la zone de notification, éventuellement épinglé sur le bureau) et est distribué en open source sur Windows, macOS et Linux. Nous le construisons donc avec Tauri (backend Rust, interface web en TypeScript) plutôt qu'avec Electron ou une application native par OS. Tauri fournit une icône de notification native, des fenêtres sans cadre ou transparentes et un binaire d'environ 10 Mo à faible empreinte mémoire ; Electron coûterait environ 150 Mo de RAM pour une liste de skills, et des applications natives par OS tripleraient la base de code.
 
-## Consequences
+## Conséquences
 
-- Filesystem scanning and watching of the Library live in the Rust side; the UI only renders.
-- Pinned mode relies on per-OS window behaviour that Tauri does not abstract. On Linux Wayland it goes through the layer-shell protocol applied to the GTK window (supported by KDE Plasma and wlroots compositors such as Sway or Hyprland, not by GNOME), so it is a Linux-specific code path inside the same app, not a separate build.
+- Le scan et la surveillance de la Library se font côté Rust ; l'interface ne fait qu'afficher.
+- Le Pinned mode dépend de comportements de fenêtre propres à chaque OS, que Tauri n'abstrait pas. Sous Linux Wayland, il passe par le protocole layer-shell appliqué à la fenêtre GTK (pris en charge par KDE Plasma et les compositeurs wlroots comme Sway ou Hyprland, pas par GNOME). C'est donc un chemin de code spécifique à Linux dans la même application, pas un build séparé.

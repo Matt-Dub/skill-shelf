@@ -1,45 +1,45 @@
-# Issue tracker: GitHub
+# Issue tracker : GitHub
 
-Issues and specs for this repo live as GitHub issues. Use the `gh` CLI for all operations.
+Les issues et les specs de ce repo sont des issues GitHub. Utilise la CLI `gh` pour toutes les opérations.
 
 ## Conventions
 
-- **Create an issue**: `gh issue create --title "..." --body "..."`. Use a heredoc for multi-line bodies.
-- **Read an issue**: `gh issue view <number> --comments`, filtering comments by `jq` and also fetching labels.
-- **List issues**: `gh issue list --state open --json number,title,body,labels,comments --jq '[.[] | {number, title, body, labels: [.labels[].name], comments: [.comments[].body]}]'` with appropriate `--label` and `--state` filters.
-- **Comment on an issue**: `gh issue comment <number> --body "..."`
-- **Apply / remove labels**: `gh issue edit <number> --add-label "..."` / `--remove-label "..."`
-- **Close**: `gh issue close <number> --comment "..."`
+- **Créer une issue** : `gh issue create --title "..." --body "..."`. Utilise un heredoc pour les corps sur plusieurs lignes.
+- **Lire une issue** : `gh issue view <number> --comments`, en filtrant les commentaires avec `jq` et en récupérant aussi les labels.
+- **Lister les issues** : `gh issue list --state open --json number,title,body,labels,comments --jq '[.[] | {number, title, body, labels: [.labels[].name], comments: [.comments[].body]}]'` avec les filtres `--label` et `--state` appropriés.
+- **Commenter une issue** : `gh issue comment <number> --body "..."`
+- **Ajouter / retirer des labels** : `gh issue edit <number> --add-label "..."` / `--remove-label "..."`
+- **Fermer** : `gh issue close <number> --comment "..."`
 
-Infer the repo from `git remote -v`; `gh` does this automatically when run inside a clone.
+Déduis le repo de `git remote -v` ; `gh` le fait automatiquement lorsqu'il est lancé dans un clone.
 
-## Pull requests as a triage surface
+## Les pull requests comme surface de triage
 
-**PRs as a request surface: no.** _(Set to `yes` if this repo treats external PRs as feature requests; `/triage` reads this flag.)_
+**PR comme surface de demandes : non.** _(Mettre à `oui` si ce repo traite les PR externes comme des demandes de fonctionnalité ; `/triage` lit ce paramètre.)_
 
-When set to `yes`, PRs run through the same labels and states as issues, using the `gh pr` equivalents:
+Quand il vaut `oui`, les PR passent par les mêmes labels et états que les issues, avec les équivalents `gh pr` :
 
-- **Read a PR**: `gh pr view <number> --comments` and `gh pr diff <number>` for the diff.
-- **List external PRs for triage**: `gh pr list --state open --json number,title,body,labels,author,authorAssociation,comments` then keep only `authorAssociation` of `CONTRIBUTOR`, `FIRST_TIME_CONTRIBUTOR`, or `NONE` (drop `OWNER`/`MEMBER`/`COLLABORATOR`).
-- **Comment / label / close**: `gh pr comment`, `gh pr edit --add-label`/`--remove-label`, `gh pr close`.
+- **Lire une PR** : `gh pr view <number> --comments` et `gh pr diff <number>` pour le diff.
+- **Lister les PR externes à trier** : `gh pr list --state open --json number,title,body,labels,author,authorAssociation,comments`, puis ne garder que les `authorAssociation` valant `CONTRIBUTOR`, `FIRST_TIME_CONTRIBUTOR` ou `NONE` (écarter `OWNER`/`MEMBER`/`COLLABORATOR`).
+- **Commenter / labelliser / fermer** : `gh pr comment`, `gh pr edit --add-label`/`--remove-label`, `gh pr close`.
 
-GitHub shares one number space across issues and PRs, so a bare `#42` may be either: resolve with `gh pr view 42` and fall back to `gh issue view 42`.
+GitHub partage une même numérotation entre issues et PR, donc un `#42` seul peut désigner l'une ou l'autre : résous-le avec `gh pr view 42`, puis à défaut `gh issue view 42`.
 
-## When a skill says "publish to the issue tracker"
+## Quand un skill dit « publier dans l'issue tracker »
 
-Create a GitHub issue.
+Crée une issue GitHub.
 
-## When a skill says "fetch the relevant ticket"
+## Quand un skill dit « récupérer le ticket concerné »
 
-Run `gh issue view <number> --comments`.
+Lance `gh issue view <number> --comments`.
 
-## Wayfinding operations
+## Opérations de wayfinding
 
-Used by `/wayfinder`. The **map** is a single issue with **child** issues as tickets.
+Utilisées par `/wayfinder`. La **carte** est une issue unique dont les tickets sont des issues **enfants**.
 
-- **Map**: a single issue labelled `wayfinder:map`, holding the Notes / Decisions-so-far / Fog body. `gh issue create --label wayfinder:map`.
-- **Child ticket**: an issue linked to the map as a GitHub sub-issue (`gh api` on the sub-issues endpoint). Where sub-issues aren't enabled, add the child to a task list in the map body and put `Part of #<map>` at the top of the child body. Labels: `wayfinder:<type>` (`research`/`prototype`/`grilling`/`task`). Once claimed, the ticket is assigned to the driving dev.
-- **Blocking**: GitHub's **native issue dependencies**, the canonical, UI-visible representation. Add an edge with `gh api --method POST repos/<owner>/<repo>/issues/<child>/dependencies/blocked_by -F issue_id=<blocker-db-id>`, where `<blocker-db-id>` is the blocker's numeric **database id** (`gh api repos/<owner>/<repo>/issues/<n> --jq .id`, _not_ the `#number` or `node_id`). GitHub reports `issue_dependencies_summary.blocked_by` (open blockers only, the live gate). Where dependencies aren't available, fall back to a `Blocked by: #<n>, #<n>` line at the top of the child body. A ticket is unblocked when every blocker is closed.
-- **Frontier query**: list the map's open children (`gh issue list --state open`, scoped to the map's sub-issues / task list), drop any with an open blocker (`issue_dependencies_summary.blocked_by > 0`, or an open issue in the `Blocked by` line) or an assignee; first in map order wins.
-- **Claim**: `gh issue edit <n> --add-assignee @me`, the session's first write.
-- **Resolve**: `gh issue comment <n> --body "<answer>"`, then `gh issue close <n>`, then append a context pointer (gist + link) to the map's Decisions-so-far.
+- **Carte** : une issue unique portant le label `wayfinder:map`, dont le corps contient les sections Notes / Décisions jusqu'ici / Brouillard. `gh issue create --label wayfinder:map`.
+- **Ticket enfant** : une issue liée à la carte comme sous-issue GitHub (`gh api` sur l'endpoint des sous-issues). Là où les sous-issues ne sont pas activées, ajoute l'enfant à une liste de tâches dans le corps de la carte et mets `Part of #<map>` en tête du corps de l'enfant. Labels : `wayfinder:<type>` (`research`/`prototype`/`grilling`/`task`). Une fois pris, le ticket est assigné au développeur qui le pilote.
+- **Blocage** : les **dépendances natives entre issues** de GitHub, la représentation canonique et visible dans l'interface. Ajoute un lien avec `gh api --method POST repos/<owner>/<repo>/issues/<child>/dependencies/blocked_by -F issue_id=<blocker-db-id>`, où `<blocker-db-id>` est l'**identifiant de base de données** numérique du bloqueur (`gh api repos/<owner>/<repo>/issues/<n> --jq .id`, _pas_ le `#number` ni le `node_id`). GitHub renvoie `issue_dependencies_summary.blocked_by` (bloqueurs ouverts uniquement, la barrière effective). Là où les dépendances ne sont pas disponibles, utilise à la place une ligne `Blocked by: #<n>, #<n>` en tête du corps de l'enfant. Un ticket est débloqué quand tous ses bloqueurs sont fermés.
+- **Requête de frontière** : liste les enfants ouverts de la carte (`gh issue list --state open`, limité aux sous-issues / à la liste de tâches de la carte), écarte ceux qui ont un bloqueur ouvert (`issue_dependencies_summary.blocked_by > 0`, ou une issue ouverte dans la ligne `Blocked by`) ou un assigné ; le premier dans l'ordre de la carte l'emporte.
+- **Prendre un ticket** : `gh issue edit <n> --add-assignee @me`, première écriture de la session.
+- **Résoudre** : `gh issue comment <n> --body "<answer>"`, puis `gh issue close <n>`, puis ajoute un pointeur de contexte (résumé + lien) aux Décisions jusqu'ici de la carte.
