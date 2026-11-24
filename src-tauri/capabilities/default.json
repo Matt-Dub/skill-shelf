@@ -15,6 +15,9 @@
         },
         {
           "path": "$HOME/.agents/skills/**"
+        },
+        {
+          "path": "$HOME/.claude/plugins/cache/**"
         }
       ]
     },
