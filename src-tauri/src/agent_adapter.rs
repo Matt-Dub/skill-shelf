@@ -10,6 +10,12 @@ pub trait AgentAdapter {
     fn shared_store_dir(&self) -> PathBuf;
     /// The shared store's lock file, recording where each stored skill was installed from.
     fn skill_lock_file(&self) -> PathBuf;
+    /// The agent's user settings, which record which plugins are enabled.
+    fn settings_file(&self) -> PathBuf;
+    /// The record of installed plugins and the folder each one is installed in.
+    fn installed_plugins_file(&self) -> PathBuf;
+    /// The record of plugin marketplaces: where each comes from and where it is checked out.
+    fn known_marketplaces_file(&self) -> PathBuf;
 }
 
 pub struct ClaudeCodeAdapter {
@@ -31,6 +37,15 @@ impl AgentAdapter for ClaudeCodeAdapter {
     }
     fn skill_lock_file(&self) -> PathBuf {
         self.home.join(".agents").join(".skill-lock.json")
+    }
+    fn settings_file(&self) -> PathBuf {
+        self.home.join(".claude").join("settings.json")
+    }
+    fn installed_plugins_file(&self) -> PathBuf {
+        self.home.join(".claude").join("plugins").join("installed_plugins.json")
+    }
+    fn known_marketplaces_file(&self) -> PathBuf {
+        self.home.join(".claude").join("plugins").join("known_marketplaces.json")
     }
 }
 
