@@ -31,7 +31,9 @@ pub fn scan_library(adapter: &dyn AgentAdapter) -> Vec<Skill> {
             let path = entry.path();
             let contents = fs::read_to_string(path.join("SKILL.md")).ok()?;
             let info = parse_skill(&contents).ok()?;
-            let origin = resolve_origin(&entry.file_name().to_string_lossy(), &lock);
+            let git_config = fs::read_to_string(path.join(".git").join("config")).ok();
+            let origin =
+                resolve_origin(&entry.file_name().to_string_lossy(), &lock, git_config.as_deref());
             Some(Skill { name: info.name, description: info.description, path, origin })
         })
         .collect();
@@ -140,6 +142,27 @@ mod tests {
 
         assert_eq!(names(&library), vec!["diagnose"]);
         assert_eq!(library[0].origin, None);
+    }
+
+    #[test]
+    fn attaches_the_git_remote_of_a_hand_cloned_skill() {
+        let home = tempfile::tempdir().unwrap();
+        let adapter = ClaudeCodeAdapter::for_home(home.path());
+        let clone = adapter.user_skills_dir().join("humanizer");
+        write_skill(&clone, "humanizer", "Make text sound human.");
+        fs::create_dir_all(clone.join(".git")).unwrap();
+        fs::write(
+            clone.join(".git").join("config"),
+            "[core]\n\tbare = false\n[remote \"origin\"]\n\turl = git@github.com:acme/humanizer.git\n",
+        )
+        .unwrap();
+
+        let library = scan_library(&adapter);
+
+        assert_eq!(
+            library[0].origin,
+            Some(Origin { url: "https://github.com/acme/humanizer".into(), repo: "acme/humanizer".into() })
+        );
     }
 
     fn names(library: &[Skill]) -> Vec<&str> {

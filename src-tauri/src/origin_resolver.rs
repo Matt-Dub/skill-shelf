@@ -30,8 +30,14 @@ impl SkillLock {
     }
 }
 
-pub fn resolve_origin(folder_name: &str, lock: &SkillLock) -> Option<Origin> {
-    let entry = lock.skills.get(folder_name)?;
+/// Resolves a skill's Origin from its lock entry or, for a skill cloned by hand,
+/// from the remote in its `.git/config` (`git_config` is that file's contents).
+pub fn resolve_origin(folder_name: &str, lock: &SkillLock, git_config: Option<&str>) -> Option<Origin> {
+    let Some(entry) = lock.skills.get(folder_name) else {
+        let (host, path) = split_source(remote_url(git_config?)?)?;
+        let repo = if host == "github.com" { path.to_string() } else { format!("{host}/{path}") };
+        return Some(Origin { url: format!("https://{host}/{path}"), repo });
+    };
     let (host, path) = split_source(&entry.source)?;
     let root = format!("https://{host}/{path}");
     if host != "github.com" {
@@ -48,6 +54,28 @@ pub fn resolve_origin(folder_name: &str, lock: &SkillLock) -> Option<Origin> {
         None => root,
     };
     Some(Origin { url, repo })
+}
+
+/// The URL of the `origin` remote in a git config file, or of its first remote.
+fn remote_url(git_config: &str) -> Option<&str> {
+    let mut remotes: Vec<(&str, &str)> = Vec::new();
+    let mut section: Option<&str> = None;
+    for line in git_config.lines().map(str::trim) {
+        if let Some(header) = line.strip_prefix('[').and_then(|l| l.strip_suffix(']')) {
+            section = header
+                .strip_prefix("remote")
+                .map(|name| name.trim().trim_matches('"'));
+        } else if let (Some(name), Some((key, value))) = (section, line.split_once('='))
+            && key.trim() == "url"
+        {
+            remotes.push((name, value.trim()));
+        }
+    }
+    remotes
+        .iter()
+        .find(|(name, _)| *name == "origin")
+        .or(remotes.first())
+        .map(|(_, url)| *url)
 }
 
 /// Splits a lock-file source into host and repository path. Accepts `owner/repo`
@@ -109,7 +137,54 @@ mod tests {
         )];
         for (label, lock, expected) in cases {
             let lock = SkillLock::parse(lock).unwrap();
-            assert_eq!(&resolve_origin("diagnose", &lock), expected, "case: {label}");
+            assert_eq!(&resolve_origin("diagnose", &lock, None), expected, "case: {label}");
         }
+    }
+
+    #[test]
+    fn resolves_origin_from_git_remote_when_not_in_lock_file() {
+        let git_config = "[core]\n\trepositoryformatversion = 0\n\tbare = false\n[remote \"origin\"]\n\turl = https://github.com/acme/humanizer.git\n\tfetch = +refs/heads/*:refs/remotes/origin/*\n[branch \"main\"]\n\tremote = origin\n";
+        let lock = SkillLock::default();
+
+        assert_eq!(
+            resolve_origin("humanizer", &lock, Some(git_config)),
+            origin("https://github.com/acme/humanizer", "acme/humanizer"),
+        );
+    }
+
+    #[test]
+    fn skill_without_lock_entry_or_git_remote_has_no_origin() {
+        let lock = SkillLock::default();
+        let repo_without_remote = "[core]\n\trepositoryformatversion = 0\n[branch \"main\"]\n\tmerge = refs/heads/main\n";
+
+        assert_eq!(resolve_origin("mine", &lock, None), None, "not a git clone");
+        assert_eq!(resolve_origin("mine", &lock, Some(repo_without_remote)), None, "clone without remote");
+    }
+
+    #[test]
+    fn prefers_the_origin_remote_and_falls_back_to_another_one() {
+        let lock = SkillLock::default();
+        let fork = "[remote \"upstream\"]\n\turl = git@github.com:acme/humanizer.git\n[remote \"origin\"]\n\turl = git@github.com:ada/humanizer.git\n";
+        let other = "[remote \"gitlab\"]\n\turl = https://gitlab.com/acme/humanizer.git\n";
+
+        assert_eq!(
+            resolve_origin("humanizer", &lock, Some(fork)),
+            origin("https://github.com/ada/humanizer", "ada/humanizer"),
+        );
+        assert_eq!(
+            resolve_origin("humanizer", &lock, Some(other)),
+            origin("https://gitlab.com/acme/humanizer", "gitlab.com/acme/humanizer"),
+        );
+    }
+
+    #[test]
+    fn lock_entry_wins_over_git_remote() {
+        let lock = SkillLock::parse(r#"{"skills":{"diagnose":{"source":"mattpocock/skills"}}}"#).unwrap();
+        let git_config = "[remote \"origin\"]\n\turl = https://github.com/ada/diagnose.git\n";
+
+        assert_eq!(
+            resolve_origin("diagnose", &lock, Some(git_config)),
+            origin("https://github.com/mattpocock/skills", "mattpocock/skills"),
+        );
     }
 }
