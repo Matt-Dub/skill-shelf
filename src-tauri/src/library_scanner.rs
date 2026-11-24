@@ -4,6 +4,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use crate::agent_adapter::AgentAdapter;
+use crate::origin_resolver::{resolve_origin, Origin, SkillLock};
 use crate::skill_parser::parse_skill;
 
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
@@ -12,19 +13,26 @@ pub struct Skill {
     pub description: String,
     /// The skill's folder as found in the agent's skills folder (not resolved).
     pub path: PathBuf,
+    /// Where the skill comes from; `None` for a skill written locally.
+    pub origin: Option<Origin>,
 }
 
 pub fn scan_library(adapter: &dyn AgentAdapter) -> Vec<Skill> {
     let Ok(entries) = fs::read_dir(adapter.user_skills_dir()) else {
         return Vec::new();
     };
+    let lock = fs::read_to_string(adapter.skill_lock_file())
+        .ok()
+        .and_then(|json| SkillLock::parse(&json).ok())
+        .unwrap_or_default();
     let mut library: Vec<Skill> = entries
         .filter_map(Result::ok)
         .filter_map(|entry| {
             let path = entry.path();
             let contents = fs::read_to_string(path.join("SKILL.md")).ok()?;
             let info = parse_skill(&contents).ok()?;
-            Some(Skill { name: info.name, description: info.description, path })
+            let origin = resolve_origin(&entry.file_name().to_string_lossy(), &lock);
+            Some(Skill { name: info.name, description: info.description, path, origin })
         })
         .collect();
     library.sort_by(|a, b| a.name.cmp(&b.name));
@@ -93,6 +101,47 @@ mod tests {
         assert!(scan_library(&ClaudeCodeAdapter::for_home(home.path())).is_empty());
     }
 
+    #[test]
+    fn attaches_the_origin_recorded_in_the_skill_lock_file() {
+        let home = tempfile::tempdir().unwrap();
+        let adapter = ClaudeCodeAdapter::for_home(home.path());
+        let stored = adapter.shared_store_dir().join("diagnose");
+        write_skill(&stored, "diagnose", "Diagnosis loop.");
+        symlink_dir(&stored, &adapter.user_skills_dir().join("diagnose"));
+        write_skill(&adapter.user_skills_dir().join("mine"), "mine", "Written by hand.");
+        fs::write(
+            adapter.skill_lock_file(),
+            r#"{"version":3,"skills":{"diagnose":{"source":"mattpocock/skills","sourceType":"github","skillPath":"skills/engineering/diagnose/SKILL.md"}}}"#,
+        )
+        .unwrap();
+
+        let library = scan_library(&adapter);
+
+        assert_eq!(
+            library[0].origin,
+            Some(Origin {
+                url: "https://github.com/mattpocock/skills/tree/HEAD/skills/engineering/diagnose".into(),
+                repo: "mattpocock/skills".into(),
+            })
+        );
+        assert_eq!(library[1].name, "mine");
+        assert_eq!(library[1].origin, None);
+    }
+
+    #[test]
+    fn malformed_skill_lock_file_leaves_skills_without_origin() {
+        let home = tempfile::tempdir().unwrap();
+        let adapter = ClaudeCodeAdapter::for_home(home.path());
+        write_skill(&adapter.user_skills_dir().join("diagnose"), "diagnose", "Diagnosis loop.");
+        fs::create_dir_all(adapter.skill_lock_file().parent().unwrap()).unwrap();
+        fs::write(adapter.skill_lock_file(), "{ not json").unwrap();
+
+        let library = scan_library(&adapter);
+
+        assert_eq!(names(&library), vec!["diagnose"]);
+        assert_eq!(library[0].origin, None);
+    }
+
     fn names(library: &[Skill]) -> Vec<&str> {
         library.iter().map(|s| s.name.as_str()).collect()
     }
@@ -111,6 +160,7 @@ mod tests {
                 name: "tdd".into(),
                 description: "Test-driven development.".into(),
                 path: adapter.user_skills_dir().join("tdd"),
+                origin: None,
             }]
         );
     }

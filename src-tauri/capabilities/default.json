@@ -10,8 +10,20 @@
     {
       "identifier": "opener:allow-open-path",
       "allow": [
-        { "path": "$HOME/.claude/skills/**" },
-        { "path": "$HOME/.agents/skills/**" }
+        {
+          "path": "$HOME/.claude/skills/**"
+        },
+        {
+          "path": "$HOME/.agents/skills/**"
+        }
+      ]
+    },
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [
+        {
+          "url": "https://*"
+        }
       ]
     }
   ]

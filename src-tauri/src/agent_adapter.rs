@@ -8,6 +8,8 @@ pub trait AgentAdapter {
     fn user_skills_dir(&self) -> PathBuf;
     /// The shared skills store that user skills may be linked from.
     fn shared_store_dir(&self) -> PathBuf;
+    /// The shared store's lock file, recording where each stored skill was installed from.
+    fn skill_lock_file(&self) -> PathBuf;
 }
 
 pub struct ClaudeCodeAdapter {
@@ -27,6 +29,9 @@ impl AgentAdapter for ClaudeCodeAdapter {
     fn shared_store_dir(&self) -> PathBuf {
         self.home.join(".agents").join("skills")
     }
+    fn skill_lock_file(&self) -> PathBuf {
+        self.home.join(".agents").join(".skill-lock.json")
+    }
 }
 
 #[cfg(test)]
@@ -43,5 +48,11 @@ mod tests {
     fn claude_code_shared_store_lives_under_dot_agents() {
         let adapter = ClaudeCodeAdapter::for_home("/home/ada");
         assert_eq!(adapter.shared_store_dir(), Path::new("/home/ada/.agents/skills"));
+    }
+
+    #[test]
+    fn claude_code_skill_lock_file_sits_next_to_the_shared_store() {
+        let adapter = ClaudeCodeAdapter::for_home("/home/ada");
+        assert_eq!(adapter.skill_lock_file(), Path::new("/home/ada/.agents/.skill-lock.json"));
     }
 }

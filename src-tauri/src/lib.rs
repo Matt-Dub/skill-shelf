@@ -1,5 +1,6 @@
 mod agent_adapter;
 mod library_scanner;
+mod origin_resolver;
 mod skill_parser;
 
 use agent_adapter::ClaudeCodeAdapter;
