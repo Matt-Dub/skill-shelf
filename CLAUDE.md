@@ -15,3 +15,5 @@ Labels canoniques par défaut (`needs-triage`, `needs-info`, `ready-for-agent`, 
 ### Documentation du domaine
 
 Mono-contexte : un `CONTEXT.md` + `docs/adr/` à la racine du repo. Voir `docs/agents/domain.md`.
+
+SilverBullet: Projects/skill-widget/
