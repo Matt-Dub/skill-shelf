@@ -1,7 +1,12 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/core";
+  import { openPath } from "@tauri-apps/plugin-opener";
+  import SkillCard from "$lib/SkillCard.svelte";
+  import type { CardAction, Skill } from "$lib/library-view-model";
 
-  type Skill = { name: string; description: string; path: string };
+  function runAction(action: CardAction) {
+    openPath(action.target).catch((error) => console.error(`${action.kind} failed`, error));
+  }
 
   const library = invoke<Skill[]>("list_skills");
 </script>
@@ -16,10 +21,7 @@
     {:else}
       <ul>
         {#each skills as skill (skill.path)}
-          <li title={skill.description}>
-            <span class="name">{skill.name}</span>
-            <span class="description">{skill.description}</span>
-          </li>
+          <SkillCard {skill} onAction={runAction} />
         {/each}
       </ul>
     {/if}
@@ -57,26 +59,6 @@
     margin: 0;
     padding: 4px 0;
     overflow-y: auto;
-  }
-  li {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 6px 12px;
-  }
-  li:hover {
-    background: color-mix(in srgb, currentColor 6%, transparent);
-  }
-  .name {
-    font-weight: 600;
-  }
-  .description {
-    opacity: 0.7;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
   }
   .status {
     padding: 12px;
